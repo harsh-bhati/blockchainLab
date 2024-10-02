@@ -1,0 +1,71 @@
+import hashlib
+
+class MerkleTree:
+    def __init__(self, transactions):
+        self.transactions = transactions
+        self.root = self.build_merkle_tree(transactions)
+
+    def calculate_hash(self, data):
+        return hashlib.sha256(data.encode()).hexdigest()
+
+    def build_merkle_tree(self, transactions):
+        if not transactions:
+            return None
+        
+        # Hash the transactions
+        hashed_transactions = [self.calculate_hash(tx) for tx in transactions]
+
+        while len(hashed_transactions) > 1:
+            if len(hashed_transactions) % 2 != 0:
+                hashed_transactions.append(hashed_transactions[-1])  # Duplicate the last hash
+
+            # Create new level of the tree
+            new_level = []
+            for i in range(0, len(hashed_transactions), 2):
+                combined_hash = hashed_transactions[i] + hashed_transactions[i + 1]
+                new_level.append(self.calculate_hash(combined_hash))
+            hashed_transactions = new_level
+
+        return hashed_transactions[0]  # The Merkle root
+
+    def get_merkle_root(self):
+        return self.root
+
+    def verify_transaction(self, transaction, proof):
+        """ Verify a transaction given the transaction hash and proof. """
+        tx_hash = self.calculate_hash(transaction)
+
+        for p in proof:
+            tx_hash = self.calculate_hash(tx_hash + p)
+
+        return tx_hash == self.root
+
+
+def main():
+    transactions = [
+        "tx1",
+        "tx2",
+        "tx3",
+        "tx4"
+    ]
+
+    # Construct Merkle Tree
+    merkle_tree = MerkleTree(transactions)
+    print("Merkle Root:", merkle_tree.get_merkle_root())
+
+    # Example transaction to verify
+    transaction_to_verify = "tx2"
+    transaction_hash = merkle_tree.calculate_hash(transaction_to_verify)
+
+    # Proof is a list of hashes needed to reconstruct the path to the Merkle root
+    # This is typically generated during the tree creation. For simplicity, let's assume:
+    proof = [
+        merkle_tree.calculate_hash(merkle_tree.calculate_hash("tx1") + merkle_tree.calculate_hash("tx2")),
+        merkle_tree.calculate_hash(merkle_tree.calculate_hash("tx3") + merkle_tree.calculate_hash("tx4"))
+    ]
+
+    is_valid = merkle_tree.verify_transaction(transaction_to_verify, proof)
+    print(f"Transaction '{transaction_to_verify}' is valid: {is_valid}")
+
+if __name__ == "__main__":
+    main()
