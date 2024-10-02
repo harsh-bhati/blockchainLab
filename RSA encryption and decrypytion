@@ -1,0 +1,34 @@
+
+!pip install rsa
+import rsa
+import json
+datafile = 'data.json'
+with open(datafile, 'w') as f:
+  json.dump("data 1 2 3", f)
+
+data = None
+with open(datafile, 'r') as f:
+  data = json.load(f)
+print(data)
+(publickey, privatekey) = rsa.newkeys(1024)
+print(publickey)
+print(privatekey)
+data = data.encode('utf8')
+ciphertext = rsa.encrypt(data, publickey)
+print(ciphertext)
+encfile = 'enc.json'
+ctext = str(ciphertext)
+with open(encfile, 'w') as f:
+  json.dump(ctext, f)
+
+decfile = 'dec.json'
+with open(encfile, 'r') as f:
+  readCipher = json.load(f)
+
+decData = rsa.decrypt(ciphertext, privatekey)
+
+
+decData = decData.decode('utf8')
+
+with open(decfile, 'w') as f:
+  json.dump(decData, f)
