@@ -1,0 +1,52 @@
+!pip install pycryptodome
+import datetime
+import random
+import time
+import json
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Util.Padding import pad
+def get_data():
+    temprature = random.randint(20,30)
+    humidity = random.randint(20,30)
+    time = datetime.datetime.now()
+    return {
+        "temprature": temprature,
+        "humidity": humidity,
+        "time": str(time)
+    }
+
+data = []
+interval = 2
+filename = 'sensor_data.json'
+
+for i in range(10):
+    data.append(get_data())
+    print(data[i])
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+    time.sleep(interval)
+
+data_file = 'sensor_data.json'
+enc_file = 'enc.json'
+
+data = open(data_file, 'rb').read()
+key = get_random_bytes(16)
+
+cipher = AES.new(key, AES.MODE_CBC)
+cipher_text = cipher.encrypt(pad(data, AES.block_size))
+iv = cipher.iv
+print(cipher_text)
+
+with open(enc_file, 'wb') as f:
+    f.write(cipher_text)
+
+cipher_data = open(enc_file, 'rb').read()
+dec_file = 'dec.json'
+
+decrypt_cipher = AES.new(key, AES.MODE_CBC, iv)
+plain_text = decrypt_cipher.decrypt(cipher_data)
+
+with open (dec_file, 'wb') as f:
+    f.write(plain_text)
+print(plain_text)
