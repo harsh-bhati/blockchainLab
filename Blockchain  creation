@@ -1,0 +1,65 @@
+import hashlib
+import time
+class Block:
+    def __init__(self, index, timestamp, data, previous_hash):
+      self.index = index
+      self.timestamp = timestamp
+      self.data = data
+      self.previous_hash = previous_hash
+      self.hash = calculate_hash(index, timestamp, previous_hash)
+
+
+def calculate_hash(index, timestamp, previous_hash):
+    block_string = f"{index}{timestamp}{previous_hash}"
+    return hashlib.sha256(block_string.encode()).hexdigest()
+
+def create_genesis_block():
+    return Block(0, time.time(), "Genesis Block", "0")
+def creare_next_block(previous_block, data):
+    index = previous_block.index + 1
+    timestamp = time.time()
+    previous_hash = previous_block.hash
+
+    return Block(index, timestamp, data, previous_hash)
+def validate_chain(chain):
+  for i in range(1, len(chain)):
+    current_block = chain[i]
+    previous_block = chain[i - 1]
+    if current_block.hash != calculate_hash(current_block.index, current_block.timestamp, current_block.previous_hash):
+      return False
+    if current_block.previous_hash != previous_block.hash:
+      return False
+  return True
+block_count = 5
+chain = [create_genesis_block()]
+print("Block genesis created")
+previous_block = chain[0]
+
+for i in range(1, block_count):
+    data = f"Block {i}"
+    next_block = creare_next_block(previous_block, data)
+    chain.append(next_block)
+    print(f"Block {i} created")
+    previous_block = next_block
+validate_chain(chain)
+def store_in_file(chain,fname):
+  with open(fname, 'w') as f:
+    for i in range(len(chain)):
+      f.write(f"Block {i}\n")
+      f.write(f"Index: {chain[i].index}\n")
+      f.write(f"Timestamp: {chain[i].timestamp}\n")
+      f.write(f"Data: {chain[i].data}\n")
+      f.write(f"Previous Hash: {chain[i].previous_hash}\n")
+      f.write(f"Hash: {chain[i].hash}\n")
+      f.write("\n")
+      f.close()
+      print("Blocks stored in file")
+      return
+
+enc_file="blocks.txt"
+store_in_file(chain,enc_file)
+
+data=open(enc_file,'r')
+print(data.read())
+cipher=data.read()
+data.close()
